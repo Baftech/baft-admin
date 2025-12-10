@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-950 text-slate-100;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+
+.card {
+  @apply bg-slate-900/40 border border-slate-800/60 rounded-xl shadow-xl shadow-black/20 backdrop-blur-sm transition-all duration-300 hover:border-slate-700/60;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-lg bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 text-sm font-medium transition-all duration-200 shadow-lg shadow-primary-900/20 hover:shadow-primary-900/40 disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none active:scale-95;
+}
+
+.input {
+  @apply w-full rounded-lg border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all duration-200;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-slate-950;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
+}
+
+
+
+
+
