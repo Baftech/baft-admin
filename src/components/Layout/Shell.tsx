@@ -8,7 +8,8 @@ const navItems = [
   { to: "/balances", label: "System Balances", roles: ["OPS", "FINANCE", "SUPERADMIN"] },
   { to: "/risk/high-velocity", label: "High Velocity", roles: ["OPS", "SUPPORT", "SUPERADMIN"] },
   { to: "/risk/large", label: "Large Txns", roles: ["OPS", "FINANCE", "SUPERADMIN"] },
-  { to: "/config/maintenance", label: "Maintenance", roles: ["SUPERADMIN"] }
+  { to: "/config/maintenance", label: "Maintenance", roles: ["SUPERADMIN"] },
+  { to: "/config/generate-qrcode", label: "Generate QR", roles: ["SUPERADMIN"] }
 ] as const;
 
 export const Shell: React.FC = () => {

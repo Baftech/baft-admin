@@ -1,0 +1,110 @@
+.qr-card {
+  width: 280px;
+  border-radius: 16px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  padding: 16px 16px 14px;
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.7);
+}
+
+.qr-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+}
+
+.qr-card-brand {
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.qr-card-label {
+  color: #94a3b8;
+}
+
+.qr-card-body {
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.qr-card-image {
+  width: 180px;
+  height: 180px;
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.qr-card-details {
+  width: 100%;
+  font-size: 11px;
+}
+
+.qr-card-merchant-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f9fafb;
+  margin-bottom: 4px;
+}
+
+.qr-card-meta-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.qr-card-meta-label {
+  color: #9ca3af;
+}
+
+.qr-card-meta-value {
+  color: #e5e7eb;
+  font-weight: 500;
+}
+
+.qr-card-footer {
+  margin-top: 8px;
+  font-size: 9px;
+  text-align: center;
+  color: #64748b;
+}
+
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+  }
+
+  #root > * {
+    display: none !important;
+  }
+
+  .qr-card,
+  .qr-card * {
+    display: block !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .qr-card {
+    border: 1px solid #000000;
+    width: 320px;
+    margin: 0 auto;
+  }
+}
+
+

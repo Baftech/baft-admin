@@ -15,6 +15,7 @@ import { HighVelocityPage } from "./pages/risk/HighVelocity";
 import { LargeTransactionsPage } from "./pages/risk/LargeTransactions";
 import { MaintenanceModePage } from "./pages/config/MaintenanceMode";
 import { NotFoundPage } from "./pages/NotFound";
+import { GenerateQrCodePage } from "./pages/GenerateQrCode";
 
 export const App: React.FC = () => {
   return (
@@ -44,6 +45,7 @@ export const App: React.FC = () => {
 
             <Route element={<ProtectedRoute allowedRoles="SUPERADMIN" />}>
               <Route path="config/maintenance" element={<MaintenanceModePage />} />
+              <Route path="config/generate-qrcode" element={<GenerateQrCodePage />} />
             </Route>
 
             <Route path="forbidden" element={<ForbiddenPage />} />

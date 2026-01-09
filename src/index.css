@@ -4,6 +4,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "./styles/PrintableQRCard.css";
+
 body {
   @apply bg-slate-950 text-slate-100;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
