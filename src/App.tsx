@@ -45,7 +45,7 @@ export const App: React.FC = () => {
 
             <Route element={<ProtectedRoute allowedRoles="SUPERADMIN" />}>
               <Route path="config/maintenance" element={<MaintenanceModePage />} />
-              <Route path="config/generate-qrcode" element={<GenerateQrCodePage />} />
+              <Route path="merchants" element={<GenerateQrCodePage />} />
             </Route>
 
             <Route path="forbidden" element={<ForbiddenPage />} />

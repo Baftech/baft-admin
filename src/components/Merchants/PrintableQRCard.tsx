@@ -16,7 +16,7 @@ export const PrintableQRCard: React.FC<PrintableQRCardProps> = ({ merchant, qrIm
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => cardRef.current,
+    contentRef: cardRef,
     documentTitle: `merchant-${merchant.id}-qr-card`
   });
 
@@ -55,5 +55,7 @@ export const PrintableQRCard: React.FC<PrintableQRCardProps> = ({ merchant, qrIm
     </div>
   );
 };
+
+
 
 

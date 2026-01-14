@@ -47,6 +47,25 @@ export const TransactionDetailPage: React.FC = () => {
 
   const txn = data?.transaction;
 
+  const formatAmount = (amountInMinor: number | string, currency: string) => {
+    const numeric = Number(amountInMinor);
+    if (!Number.isFinite(numeric)) return "—";
+    const value = numeric / 100;
+    try {
+      // Try ISO currency formatting first
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency
+      }).format(value);
+    } catch {
+      // Fallback for sandbox/test currencies like BCOIN
+      return `${currency || "N/A"} ${value.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
@@ -260,20 +279,10 @@ export const TransactionDetailPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 font-mono text-emerald-400/90">
-                      {Number.isFinite(Number(entry.debit))
-                        ? (Number(entry.debit) / 100).toLocaleString("en-IN", {
-                            style: "currency",
-                            currency: entry.currency
-                          })
-                        : "—"}
+                      {formatAmount(entry.debit, entry.currency)}
                     </td>
                     <td className="px-6 py-4 font-mono text-rose-400/90">
-                      {Number.isFinite(Number(entry.credit))
-                        ? (Number(entry.credit) / 100).toLocaleString("en-IN", {
-                            style: "currency",
-                            currency: entry.currency
-                          })
-                        : "—"}
+                      {formatAmount(entry.credit, entry.currency)}
                     </td>
                     <td className="px-6 py-4 text-slate-400 text-xs">{entry.currency}</td>
                     <td className="px-6 py-4 text-slate-400 text-xs">

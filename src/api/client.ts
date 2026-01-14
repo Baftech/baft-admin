@@ -1,13 +1,26 @@
 import type { ApiError } from "../types";
 
-const API_BASE_URL =
-  (import.meta as any).env?.VITE_ADMIN_API_BASE_URL ||
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE_URL) ||
-  "/api/admin";
+// Always call the backend via the Vite proxy at /api/admin
+const API_BASE_URL = "/api/admin";
+const ACCESS_KEY_PRIMARY = "baft_admin_access_token";
+const ACCESS_KEY_ALT = "admin_access_token";
 
 export class ApiClient {
   private getAccessToken(): string | null {
-    return window.localStorage.getItem("baft_admin_access_token");
+    // Prefer the key used by this frontend, but also support the docs' {{admin_access_token}} name.
+    const primary = window.localStorage.getItem(ACCESS_KEY_PRIMARY);
+    const alt = window.localStorage.getItem(ACCESS_KEY_ALT);
+    const token = primary || alt;
+
+    if (!token) {
+      console.warn("[API Client] Admin access token is missing from localStorage");
+      console.warn("  Checked keys:", ACCESS_KEY_PRIMARY, "and", ACCESS_KEY_ALT);
+      console.warn("  Please login to get a valid token");
+    } else {
+      console.log("[API Client] Admin access token found", token.substring(0, 20) + "...");
+    }
+
+    return token;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -22,13 +35,30 @@ export class ApiClient {
       const token = this.getAccessToken();
       if (token) {
         headers.Authorization = `Bearer ${token}`;
+        console.log("[API Client] Adding Bearer token to request:", path);
+      } else {
+        console.error("[API Client] No token available for request:", path);
+        console.error("  Request will be sent without Authorization header");
       }
+    } else {
+      console.log("[API Client] Using provided Authorization header for:", path);
     }
 
-    let res = await fetch(`${API_BASE_URL}${path}`, {
+    const fullUrl = `${API_BASE_URL}${path}`;
+    console.log("[API Client] Making request:", options.method || "GET", fullUrl);
+
+    let res = await fetch(fullUrl, {
       ...options,
       headers
     });
+
+    console.log(
+      "[API Client] Response status:",
+      res.status,
+      res.statusText,
+      "for",
+      path
+    );
 
     // Handle 401 Unauthorized - Attempt Refresh
     if (res.status === 401 && !path.includes("/auth/login") && !path.includes("/auth/refresh")) {
@@ -50,13 +80,12 @@ export class ApiClient {
 
             // Retry the original request with the new token
             headers.Authorization = `Bearer ${data.accessToken}`;
-            res = await fetch(`${API_BASE_URL}${path}`, {
+            res = await fetch(fullUrl, {
               ...options,
               headers
             });
           } else {
             // Refresh failed, clear tokens and let the error propagate (or redirect)
-            // The AuthContext will likely pick this up or the user will be redirected on next nav
             window.localStorage.removeItem("baft_admin_access_token");
             window.localStorage.removeItem("baft_admin_refresh_token");
             window.localStorage.removeItem("baft_admin_profile");

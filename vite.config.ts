@@ -13,8 +13,7 @@ export default defineConfig(({ mode }) => {
         "/api/admin": {
           target: env.VITE_API_BACKEND_URL || "http://localhost:8000",
           changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/api\/admin/, "/api/admin")
+          secure: false
         }
       }
     }
