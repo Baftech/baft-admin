@@ -10,6 +10,14 @@ import { UsersListPage } from "./pages/users/UsersList";
 import { UserDetailPage } from "./pages/users/UserDetail";
 import { SystemBalancesPage } from "./pages/balances/SystemBalances";
 import { PlatformFeesPage } from "./pages/balances/PlatformFees";
+import { RewardsLayout } from "./pages/rewards/RewardsLayout";
+import { RewardsDashboard } from "./pages/rewards/RewardsDashboard";
+import { CampaignsListPage } from "./pages/rewards/campaigns/CampaignsList";
+import { CampaignBuilderPage } from "./pages/rewards/campaigns/CampaignBuilder";
+import { RewardLedgerPage } from "./pages/rewards/RewardLedger";
+import { PendingQueuePage } from "./pages/rewards/PendingQueue";
+import { PoolHealthPage } from "./pages/rewards/PoolHealth";
+import { FraudMonitorPage } from "./pages/rewards/FraudMonitor";
 import { TransactionsListPage } from "./pages/transactions/TransactionsList";
 import { TransactionDetailPage } from "./pages/transactions/TransactionDetail";
 import { HighVelocityPage } from "./pages/risk/HighVelocity";
@@ -36,6 +44,18 @@ export const App: React.FC = () => {
             <Route element={<ProtectedRoute allowedRoles={["OPS", "FINANCE", "SUPERADMIN"]} />}>
               <Route path="balances" element={<SystemBalancesPage />} />
               <Route path="balances/fees" element={<PlatformFeesPage />} />
+
+              <Route path="rewards" element={<RewardsLayout />}>
+                <Route index element={<RewardsDashboard />} />
+                <Route path="campaigns" element={<CampaignsListPage />} />
+                <Route path="campaigns/new" element={<CampaignBuilderPage />} />
+                <Route path="campaigns/:id" element={<CampaignBuilderPage />} />
+                <Route path="ledger" element={<RewardLedgerPage />} />
+                <Route path="pending" element={<PendingQueuePage />} />
+                <Route path="pool" element={<PoolHealthPage />} />
+                <Route path="fraud" element={<FraudMonitorPage />} />
+              </Route>
+
               <Route path="transactions" element={<TransactionsListPage />} />
               <Route path="transactions/:id" element={<TransactionDetailPage />} />
               <Route path="risk/large" element={<LargeTransactionsPage />} />
