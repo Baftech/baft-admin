@@ -220,38 +220,46 @@ export const UserDetailPage: React.FC = () => {
                 const hasValidAmount = Number.isFinite(amountInPaise);
                 const displayAmount = hasValidAmount
                   ? (amountInPaise / 100).toLocaleString("en-IN", {
-                      style: "currency",
-                      currency: "INR"
-                    })
+                    style: "currency",
+                    currency: "INR"
+                  })
                   : "₹0.00";
 
                 return (
-                <div
-                  key={t.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-slate-950/50 border border-slate-800/50 hover:border-slate-700 transition-colors"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-200 text-sm font-medium">{t.type}</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${t.status === "SUCCESSFUL"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-slate-800 text-slate-400 border-slate-700"
-                        }`}>
-                        {t.status}
-                      </span>
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-slate-950/50 border border-slate-800/50 hover:border-slate-700 transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-200 text-sm font-medium">{t.type}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${t.status === "SUCCESSFUL"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-slate-800 text-slate-400 border-slate-700"
+                          }`}>
+                          {t.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {new Date(t.created_at).toLocaleString("en-IN", {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: true
+                        })}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">
-                      {new Date(t.created_at).toLocaleDateString()}
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-white">
+                        {displayAmount}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-white">
-                      {displayAmount}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           </div>
         </div>

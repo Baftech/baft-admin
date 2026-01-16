@@ -9,6 +9,7 @@ import { ForbiddenPage } from "./pages/Forbidden";
 import { UsersListPage } from "./pages/users/UsersList";
 import { UserDetailPage } from "./pages/users/UserDetail";
 import { SystemBalancesPage } from "./pages/balances/SystemBalances";
+import { PlatformFeesPage } from "./pages/balances/PlatformFees";
 import { TransactionsListPage } from "./pages/transactions/TransactionsList";
 import { TransactionDetailPage } from "./pages/transactions/TransactionDetail";
 import { HighVelocityPage } from "./pages/risk/HighVelocity";
@@ -34,6 +35,7 @@ export const App: React.FC = () => {
 
             <Route element={<ProtectedRoute allowedRoles={["OPS", "FINANCE", "SUPERADMIN"]} />}>
               <Route path="balances" element={<SystemBalancesPage />} />
+              <Route path="balances/fees" element={<PlatformFeesPage />} />
               <Route path="transactions" element={<TransactionsListPage />} />
               <Route path="transactions/:id" element={<TransactionDetailPage />} />
               <Route path="risk/large" element={<LargeTransactionsPage />} />
