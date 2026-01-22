@@ -1,15 +1,30 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
-import { rewardsApi, Campaign } from "../../../api/rewards";
+import { campaignsApi } from "../../../api/campaigns";
+import { Campaign } from "../../../api/types";
 
 export const CampaignsListPage: React.FC = () => {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const { data: campaigns, isLoading } = useQuery({
         queryKey: ["campaigns"],
-        queryFn: rewardsApi.getCampaigns
+        queryFn: campaignsApi.list
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: campaignsApi.delete,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+        }
+    });
+
+    const handleDelete = (id: string) => {
+        if (window.confirm("Are you sure you want to delete this campaign?")) {
+            deleteMutation.mutate(id);
+        }
+    };
 
     const getStatusColor = (status: Campaign["status"]) => {
         switch (status) {
@@ -101,15 +116,26 @@ export const CampaignsListPage: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button
-                                                onClick={() => navigate(`/rewards/campaigns/${camp.id}`)}
-                                                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-                                                title="Edit Campaign"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </button>
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => navigate(`/rewards/campaigns/${camp.id}`)}
+                                                    className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                                                    title="Edit Campaign"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(camp.id)}
+                                                    className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+                                                    title="Delete Campaign"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

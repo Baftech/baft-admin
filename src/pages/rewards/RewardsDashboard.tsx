@@ -1,23 +1,46 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { campaignsApi } from "../../api/campaigns";
 import { rewardsApi } from "../../api/rewards";
+import { analyticsApi } from "../../api/analytics";
 
 export const RewardsDashboard: React.FC = () => {
     const navigate = useNavigate();
 
+    // Parallel queries for dashboard data
     const { data: campaigns } = useQuery({
         queryKey: ["campaigns"],
-        queryFn: rewardsApi.getCampaigns
+        queryFn: campaignsApi.list
+    });
+
+    const { data: poolHealth } = useQuery({
+        queryKey: ["pool-health"],
+        queryFn: analyticsApi.getPoolHealth
+    });
+
+    const { data: pendingRewards } = useQuery({
+        queryKey: ["pending-rewards"],
+        queryFn: rewardsApi.getPendingRewards
+    });
+
+    const { data: globalAnalytics } = useQuery({
+        queryKey: ["global-analytics"],
+        queryFn: analyticsApi.getGlobal
     });
 
     const activeCampaigns = campaigns?.filter(c => c.status === "ACTIVE") || [];
+    
+    // Calculate aggregate stats
+    const paidToday = globalAnalytics?.reduce((acc, curr) => acc + (curr.paid_today || 0), 0) || 0;
+    const pendingCount = pendingRewards?.length || 0;
+    const poolBalance = poolHealth?.current_balance || 0;
 
     const stats = [
         { label: "Active Campaigns", value: activeCampaigns.length, color: "text-emerald-400" },
-        { label: "Rewards Paid Today", value: "₹45,200", color: "text-white" },
-        { label: "Pending Review", value: "12", color: "text-amber-400" },
-        { label: "Pool Balance", value: "₹15.4L", color: "text-indigo-400" },
+        { label: "Rewards Paid Today", value: `₹${paidToday.toLocaleString()}`, color: "text-white" },
+        { label: "Pending Review", value: pendingCount, color: "text-amber-400" },
+        { label: "Pool Balance", value: `₹${(poolBalance / 100000).toFixed(2)}L`, color: "text-indigo-400" },
     ];
 
     return (
@@ -66,7 +89,9 @@ export const RewardsDashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <div className="text-slate-500 text-xs">Utilization</div>
-                                        <div className="font-mono text-emerald-400">{Math.round((camp.burnedAmount / camp.totalBudget) * 100)}%</div>
+                                        <div className="font-mono text-emerald-400">
+                                            {camp.totalBudget > 0 ? Math.round((camp.burnedAmount / camp.totalBudget) * 100) : 0}%
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -75,7 +100,7 @@ export const RewardsDashboard: React.FC = () => {
                             <div className="mt-4 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-emerald-500 rounded-full"
-                                    style={{ width: `${(camp.burnedAmount / camp.totalBudget) * 100}%` }}
+                                    style={{ width: `${camp.totalBudget > 0 ? (camp.burnedAmount / camp.totalBudget) * 100 : 0}%` }}
                                 ></div>
                             </div>
                         </div>

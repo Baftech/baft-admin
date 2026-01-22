@@ -1,11 +1,20 @@
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { analyticsApi } from "../../api/analytics";
 
 export const FraudMonitorPage: React.FC = () => {
-    const suspiciousUsers = [
-        { id: "usr_999xxx", score: 92, reason: "Device ID reuse (5 accs)", earned: 5000 },
-        { id: "usr_888xxx", score: 85, reason: "Velocity: 10 txns/min", earned: 1200 },
-        { id: "usr_777xxx", score: 78, reason: "Referral cycling", earned: 450 },
-    ];
+    const { data: riskData, isLoading } = useQuery({
+        queryKey: ["risk-monitor"],
+        queryFn: analyticsApi.getRiskMonitor
+    });
+
+    if (isLoading) {
+        return <div className="p-12 text-center text-slate-500">Loading fraud intelligence...</div>;
+    }
+
+    const suspiciousUsers = riskData?.suspicious_users || [];
+    const riskDist = riskData?.risk_distribution || { low: 0, medium: 0, high: 0 };
+    const totalRisk = (riskDist.low || 0) + (riskDist.medium || 0) + (riskDist.high || 0) || 1;
 
     return (
         <div className="space-y-6">
@@ -24,44 +33,74 @@ export const FraudMonitorPage: React.FC = () => {
                             <tr>
                                 <th className="px-4 py-3">User</th>
                                 <th className="px-4 py-3">Risk Score</th>
-                                <th className="px-4 py-3">Flags</th>
-                                <th className="px-4 py-3 text-right">Lifetime Earned</th>
+                                <th className="px-4 py-3">Reason</th>
+                                <th className="px-4 py-3 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800">
-                            {suspiciousUsers.map(user => (
-                                <tr key={user.id} className="hover:bg-slate-800/30">
-                                    <td className="px-4 py-3 font-mono text-slate-300">{user.id}</td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-red-400 font-bold">{user.score}</span>
+                            {suspiciousUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                                        No suspicious activity detected.
                                     </td>
-                                    <td className="px-4 py-3 text-red-300 text-xs">{user.reason}</td>
-                                    <td className="px-4 py-3 text-right font-mono text-slate-300">₹{user.earned}</td>
                                 </tr>
-                            ))}
+                            ) : (
+                                suspiciousUsers.map((user: any) => (
+                                    <tr key={user.user_id} className="hover:bg-slate-800/30">
+                                        <td className="px-4 py-3 font-mono text-slate-300">{user.user_id}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`font-bold ${user.risk_score > 80 ? 'text-red-400' : 'text-amber-400'}`}>
+                                                {user.risk_score}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-red-300 text-xs">{user.reason}</td>
+                                        <td className="px-4 py-3 text-right">
+                                            <button className="text-xs text-indigo-400 hover:text-indigo-300">Investigate</button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 <div className="card p-6 space-y-6">
-                    <h3 className="font-semibold text-white">Global Patterns</h3>
+                    <h3 className="font-semibold text-white">Risk Distribution</h3>
                     <div className="space-y-4">
                         <div className="text-sm">
                             <div className="flex justify-between text-slate-400 mb-1">
-                                <span>Referral Clusters</span>
-                                <span className="text-red-400">3 detected</span>
+                                <span>High Risk</span>
+                                <span className="text-red-400">{riskDist.high} users</span>
                             </div>
                             <div className="h-1.5 w-full bg-slate-800 rounded-full">
-                                <div className="h-full bg-red-500 w-[30%] rounded-full"></div>
+                                <div 
+                                    className="h-full bg-red-500 rounded-full" 
+                                    style={{ width: `${(riskDist.high / totalRisk) * 100}%` }}
+                                ></div>
                             </div>
                         </div>
                         <div className="text-sm">
                             <div className="flex justify-between text-slate-400 mb-1">
-                                <span>Merchant Cycling</span>
-                                <span className="text-amber-400">12 detected</span>
+                                <span>Medium Risk</span>
+                                <span className="text-amber-400">{riskDist.medium} users</span>
                             </div>
                             <div className="h-1.5 w-full bg-slate-800 rounded-full">
-                                <div className="h-full bg-amber-500 w-[60%] rounded-full"></div>
+                                <div 
+                                    className="h-full bg-amber-500 rounded-full" 
+                                    style={{ width: `${(riskDist.medium / totalRisk) * 100}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                        <div className="text-sm">
+                            <div className="flex justify-between text-slate-400 mb-1">
+                                <span>Low Risk</span>
+                                <span className="text-emerald-400">{riskDist.low} users</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-800 rounded-full">
+                                <div 
+                                    className="h-full bg-emerald-500 rounded-full" 
+                                    style={{ width: `${(riskDist.low / totalRisk) * 100}%` }}
+                                ></div>
                             </div>
                         </div>
                     </div>

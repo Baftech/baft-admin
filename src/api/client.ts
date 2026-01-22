@@ -141,6 +141,10 @@ export class ApiClient {
       body: body ? JSON.stringify(body) : undefined
     });
   }
+
+  delete<T>(path: string, init?: RequestInit) {
+    return this.request<T>(path, { ...(init || {}), method: "DELETE" });
+  }
 }
 
 export const apiClient = new ApiClient();

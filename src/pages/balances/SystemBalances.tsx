@@ -112,8 +112,3 @@ export const SystemBalancesPage: React.FC = () => {
     </div>
   );
 };
-
-
-
-
-

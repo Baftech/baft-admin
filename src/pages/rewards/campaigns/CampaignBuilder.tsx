@@ -1,7 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { rewardsApi, Campaign, CreateCampaignRequest, CampaignType, CampaignStatus } from "../../../api/rewards";
+import { campaignsApi } from "../../../api/campaigns";
+import { CampaignType, CampaignStatus } from "../../../api/types";
+
+// Local form state matches component inputs (camelCase)
+interface CampaignFormState {
+    name: string;
+    type: CampaignType;
+    status: CampaignStatus;
+    startDate: string;
+    endDate: string;
+    totalBudget: number;
+    dailyBudget: number;
+    perUserCap: number;
+    priority: number;
+    rules: any;
+}
 
 export const CampaignBuilderPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -11,14 +26,14 @@ export const CampaignBuilderPage: React.FC = () => {
 
     const { data: campaign, isLoading: isLoadingCampaign } = useQuery({
         queryKey: ["campaign", id],
-        queryFn: () => rewardsApi.getCampaign(id!),
+        queryFn: () => campaignsApi.get(id!),
         enabled: isEdit,
     });
 
-    const [formData, setFormData] = useState<CreateCampaignRequest>({
+    const [formData, setFormData] = useState<CampaignFormState>({
         name: "",
         type: "CASHBACK",
-        status: "DRAFT",
+        status: "PAUSED",
         startDate: new Date().toISOString().split("T")[0],
         endDate: "",
         totalBudget: 0,
@@ -26,9 +41,10 @@ export const CampaignBuilderPage: React.FC = () => {
         perUserCap: 0,
         priority: 0,
         rules: {
-            min_txn: 100,
+            min_amount: 100,
+            cashback_type: "PERCENTAGE",
             cashback_percent: 5,
-            max_cashback: 50
+            max_reward_amount: 50
         }
     });
 
@@ -37,7 +53,18 @@ export const CampaignBuilderPage: React.FC = () => {
 
     useEffect(() => {
         if (campaign) {
-            setFormData(campaign);
+            setFormData({
+                name: campaign.name,
+                type: campaign.type,
+                status: campaign.status,
+                startDate: campaign.startDate ? campaign.startDate.split("T")[0] : "",
+                endDate: campaign.endDate ? campaign.endDate.split("T")[0] : "",
+                totalBudget: campaign.totalBudget,
+                dailyBudget: 0, // Not in API
+                perUserCap: campaign.perUserCap,
+                priority: campaign.priority,
+                rules: campaign.rules
+            });
             setRulesJson(JSON.stringify(campaign.rules, null, 2));
         }
     }, [campaign]);
@@ -62,8 +89,38 @@ export const CampaignBuilderPage: React.FC = () => {
         }
     };
 
+    const hasStarted = campaign && new Date(campaign.startDate) <= new Date();
+
     const mutation = useMutation({
-        mutationFn: rewardsApi.createCampaign,
+        mutationFn: async (data: CampaignFormState) => {
+            const toISO = (d: string, end = false) => {
+                if (!d) return "";
+                if (d.includes("T")) return d;
+                return end ? `${d}T23:59:59Z` : `${d}T00:00:00Z`;
+            };
+
+            const payload: any = {
+                name: data.name,
+                type: data.type,
+                status: data.status,
+                end_date: toISO(data.endDate, true),
+                total_budget: data.totalBudget,
+                per_user_cap: data.perUserCap,
+                priority: data.priority,
+                rules: data.rules
+            };
+
+            // Only include start_date if it hasn't started or we are creating
+            if (!isEdit || !hasStarted) {
+                payload.start_date = toISO(data.startDate);
+            }
+
+            if (isEdit && id) {
+                return campaignsApi.update(id, payload);
+            } else {
+                return campaignsApi.create(payload);
+            }
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["campaigns"] });
             navigate("/rewards/campaigns");
@@ -164,17 +221,21 @@ export const CampaignBuilderPage: React.FC = () => {
                             <input
                                 type="date"
                                 name="startDate"
-                                value={formData.startDate.split("T")[0]}
+                                value={formData.startDate}
                                 onChange={handleInputChange}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all"
+                                disabled={isEdit && hasStarted}
+                                className={`w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all ${isEdit && hasStarted ? 'opacity-50 cursor-not-allowed' : ''}`}
                             />
+                            {isEdit && hasStarted && (
+                                <p className="text-xs text-amber-500">Cannot change start date after campaign has started.</p>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-slate-400">End Date</label>
                             <input
                                 type="date"
                                 name="endDate"
-                                value={formData.endDate.split("T")[0]}
+                                value={formData.endDate}
                                 onChange={handleInputChange}
                                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all"
                             />
@@ -200,7 +261,7 @@ export const CampaignBuilderPage: React.FC = () => {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-400">Daily Budget</label>
+                            <label className="text-sm font-medium text-slate-400">Daily Budget (Optional)</label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2.5 text-slate-500">₹</span>
                                 <input
