@@ -42,6 +42,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // We don't need a proactive interval here anymore, or we could keep it as a backup.
   // For now, removing it to rely on the reactive 401 handling.
 
+  useEffect(() => {
+    if (state.accessToken) {
+      console.log("%c Admin Access Token: ", "background: #222; color: #bada55; font-size: 14px;", state.accessToken);
+    }
+  }, [state.accessToken]);
+
   const persist = (next: AuthState) => {
     setState(next);
     if (next.accessToken) {

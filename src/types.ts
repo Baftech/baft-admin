@@ -18,6 +18,7 @@ export interface Pagination {
 export interface ApiError {
   error_code: string;
   message: string;
+  raw_error?: string;
 }
 
 

@@ -111,6 +111,7 @@ export class ApiClient {
       }
       const error = new Error(errorBody?.message || "Request failed");
       (error as any).code = errorBody?.error_code;
+      (error as any).raw_error = errorBody?.raw_error;
       (error as any).status = res.status;
       throw error;
     }
