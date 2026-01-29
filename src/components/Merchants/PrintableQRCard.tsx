@@ -15,17 +15,22 @@ interface PrintableQRCardProps {
 export const PrintableQRCard: React.FC<PrintableQRCardProps> = ({ merchant, qrImageUrl }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
 
-  const handlePrint = useReactToPrint({
-    contentRef: cardRef,
-    documentTitle: `merchant-${merchant.id}-qr-card`
-  });
+  const handleDownload = () => {
+    // Create a temporary anchor element to trigger download
+    const link = document.createElement('a');
+    link.href = qrImageUrl;
+    link.download = `merchant-${merchant.id}-qr-code.jpeg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-sm font-semibold text-slate-100">QR Preview</h2>
-        <button className="btn-primary" type="button" onClick={handlePrint}>
-          Print QR Card
+        <button className="btn-primary" type="button" onClick={handleDownload}>
+          Download QR Code
         </button>
       </div>
 

@@ -24,25 +24,38 @@ const MERCHANT_CATEGORIES = [
   "Investment",
   "Fitness",
   "Pet",
-  "Miscellaneous"
+  "Miscellaneous",
+  "Tea Stall",
+  "Coffee Shop",
+  "Bakery",
+  "Juice Centre",
+  "Street Food",
+  "Convenience Store",
+  "Mobile Accessories",
+  "Salon",
+  "Gym"
 ] as const;
 
 interface Merchant {
-  merchant_id: string;
+  id?: string; // Database ID for API calls
+  merchant_id: string; // Display ID
   name: string;
   category: string;
-  risk_profile?: "LOW" | "MEDIUM" | "HIGH"; // May not be in GET single merchant response
-  qr_image?: string; // base64 data URL - only in create response
-  destination_account?: string; // From GET single merchant response
+  risk_profile?: "LOW" | "MEDIUM" | "HIGH";
+  qr_image?: string; // base64 data URL
+  destination_account?: string;
   config?: {
     simulate_failure?: boolean;
   };
-}
-
-interface CreateMerchantRequest {
-  name: string;
-  category: string;
-  risk_profile: "LOW" | "MEDIUM" | "HIGH";
+  created_at?: string;
+  account?: {
+    id: string;
+    account_number: string;
+    balance: number;
+    currency: string;
+  };
+  transactions?: any[];
+  qr_payload?: string;
 }
 
 interface UpdateMerchantRequest {
@@ -57,17 +70,16 @@ export const GenerateQrCodePage: React.FC = () => {
   const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
-
-  // Create form state
-  const [createName, setCreateName] = useState("");
-  const [createCategory, setCreateCategory] = useState("");
-  const [createRiskProfile, setCreateRiskProfile] = useState<"LOW" | "MEDIUM" | "HIGH">("LOW");
 
   // Update form state
   const [updateRiskProfile, setUpdateRiskProfile] = useState<"LOW" | "MEDIUM" | "HIGH">("LOW");
   const [updateSimulateFailure, setUpdateSimulateFailure] = useState(false);
+
+  // Filter state
+  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [filterRiskProfile, setFilterRiskProfile] = useState<string>("");
+  const [filterName, setFilterName] = useState<string>("");
 
   // Load all merchants on mount
   useEffect(() => {
@@ -99,42 +111,12 @@ export const GenerateQrCodePage: React.FC = () => {
     }
   };
 
-  const handleCreateMerchant = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!createName.trim() || !createCategory.trim()) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const payload: CreateMerchantRequest = {
-        name: createName.trim(),
-        category: createCategory.trim(),
-        risk_profile: createRiskProfile
-      };
-      // Create: POST /api/admin/merchants
-      const res = await apiClient.post<Merchant>("/merchants", payload);
-      setMerchants([...merchants, res]);
-      setSelectedMerchant(res);
-      setShowCreateForm(false);
-      setCreateName("");
-      setCreateCategory("");
-      setCreateRiskProfile("LOW");
-    } catch (err) {
-      setError((err as Error).message || "Failed to create merchant");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSelectMerchant = async (merchantId: string) => {
     setLoading(true);
     setError(null);
     try {
       console.log("[Merchants] Merchant clicked:", merchantId);
 
-      // In the admin console we rely on the admin merchants list
-      // and do NOT call the user-facing `/api/merchants/:id` route.
       let merchantFromList = merchants.find((m) => m.merchant_id === merchantId);
 
       // If not found (e.g. after an update), refresh the list once and try again
@@ -150,13 +132,17 @@ export const GenerateQrCodePage: React.FC = () => {
         return;
       }
 
-      console.log("[Merchants] Selected merchant from list:", {
-        id: merchantFromList.merchant_id,
-        name: merchantFromList.name,
-        hasQr: Boolean(merchantFromList.qr_image)
+      // Fetch detailed merchant information including QR image
+      console.log("[Merchants] Fetching detailed merchant info for:", merchantId);
+      const detailedMerchant = await apiClient.get<Merchant>(`/merchants/${merchantFromList.id}`);
+
+      console.log("[Merchants] Selected merchant with details:", {
+        id: detailedMerchant.merchant_id,
+        name: detailedMerchant.name,
+        hasQr: Boolean(detailedMerchant.qr_image)
       });
 
-      setSelectedMerchant(merchantFromList);
+      setSelectedMerchant(detailedMerchant);
       setShowUpdateForm(false);
     } catch (err) {
       setError((err as Error).message || "Failed to load merchant details");
@@ -180,7 +166,7 @@ export const GenerateQrCodePage: React.FC = () => {
         }
       };
       // Update: PATCH /api/admin/merchants/:id
-      await apiClient.patch(`/merchants/${selectedMerchant.merchant_id}`, payload);
+      await apiClient.patch(`/merchants/${selectedMerchant.id}`, payload);
       // Reload merchants and selected merchant
       await loadMerchants();
       await handleSelectMerchant(selectedMerchant.merchant_id);
@@ -196,7 +182,6 @@ export const GenerateQrCodePage: React.FC = () => {
     setSelectedMerchant(merchant);
     setUpdateRiskProfile(merchant.risk_profile || "LOW");
     setUpdateSimulateFailure(merchant.config?.simulate_failure || false);
-    setShowCreateForm(false);
     setShowUpdateForm(true);
   };
 
@@ -213,7 +198,7 @@ export const GenerateQrCodePage: React.FC = () => {
           className="btn-primary text-sm"
           type="button"
           onClick={() => {
-            setShowCreateForm(true);
+            setShowUpdateForm(true);
             setShowUpdateForm(false);
             setSelectedMerchant(null);
           }}
@@ -243,13 +228,77 @@ export const GenerateQrCodePage: React.FC = () => {
             </button>
           </div>
 
-          {loading && merchants.length === 0 ? (
+          {/* Filter Section */}
+          <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+            <h3 className="text-sm font-medium text-slate-200 mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-slate-300">Category</label>
+                <select
+                  className="select"
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  {MERCHANT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-slate-300">Risk Profile</label>
+                <select
+                  className="select"
+                  value={filterRiskProfile}
+                  onChange={(e) => setFilterRiskProfile(e.target.value)}
+                >
+                  <option value="">All Risk Profiles</option>
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                </select>
+              </div>
+              <div className="space-y-1 sm:col-span-2 lg:col-span-1">
+                <label className="block text-xs font-medium text-slate-300">Search Name</label>
+                <div className="relative">
+                  <input
+                    className="input text-sm pl-9"
+                    type="text"
+                    placeholder="Search by name..."
+                    value={filterName}
+                    onChange={(e) => setFilterName(e.target.value)}
+                  />
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filtered Merchants */}
+          {(() => {
+            const filteredMerchants = merchants.filter((m) => {
+              const matchesCategory = !filterCategory || m.category === filterCategory;
+              const matchesRisk = !filterRiskProfile || m.risk_profile === filterRiskProfile;
+              const matchesName = !filterName || m.name.toLowerCase().includes(filterName.toLowerCase());
+              return matchesCategory && matchesRisk && matchesName;
+            });
+
+            return loading && merchants.length === 0 ? (
             <p className="text-xs text-slate-400">Loading merchants...</p>
           ) : merchants.length === 0 ? (
             <p className="text-xs text-slate-400">No merchants found. Create one to get started.</p>
           ) : (
             <div className="space-y-2">
-              {merchants.map((m) => (
+              {filteredMerchants.map((m) => (
                 <div
                   key={m.merchant_id}
                   className={`p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -301,77 +350,13 @@ export const GenerateQrCodePage: React.FC = () => {
                 </div>
               ))}
             </div>
-          )}
+          );
+        })()}
         </div>
 
-        {/* QR Preview / Create Form / Update Form */}
+        {/* QR Preview / Update Form */}
         <div className="card p-4 md:p-6 space-y-4">
-          {showCreateForm ? (
-            <div>
-              <h2 className="text-sm font-semibold text-slate-100 mb-4">Create New Merchant</h2>
-              <form onSubmit={handleCreateMerchant} className="space-y-3">
-                <div>
-                  <label className="block text-xs mb-1 text-slate-300">Merchant Name</label>
-                  <input
-                    className="input"
-                    type="text"
-                    placeholder="e.g. Admin Test Cafe"
-                    value={createName}
-                    onChange={(e) => setCreateName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1 text-slate-300">Category</label>
-                  <select
-                    className="input"
-                    value={createCategory}
-                    onChange={(e) => setCreateCategory(e.target.value)}
-                    required
-                  >
-                    <option value="" disabled>
-                      Select category
-                    </option>
-                    {MERCHANT_CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs mb-1 text-slate-300">Risk Profile</label>
-                  <select
-                    className="input"
-                    value={createRiskProfile}
-                    onChange={(e) =>
-                      setCreateRiskProfile(e.target.value as "LOW" | "MEDIUM" | "HIGH")
-                    }
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                  </select>
-                </div>
-                <div className="flex gap-2">
-                  <button className="btn-primary flex-1" type="submit" disabled={loading}>
-                    {loading ? "Creating..." : "Create & Generate QR"}
-                  </button>
-                  <button
-                    className="btn-secondary"
-                    type="button"
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      setCreateName("");
-                      setCreateCategory("");
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : showUpdateForm && selectedMerchant ? (
+          {showUpdateForm && selectedMerchant ? (
             <div>
               <h2 className="text-sm font-semibold text-slate-100 mb-4">
                 Update Merchant: {selectedMerchant.name}

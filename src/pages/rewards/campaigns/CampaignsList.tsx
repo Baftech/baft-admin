@@ -70,6 +70,7 @@ export const CampaignsListPage: React.FC = () => {
                         <thead className="bg-slate-900/50 text-slate-400 uppercase tracking-wider text-xs font-semibold">
                             <tr>
                                 <th className="px-6 py-4">Campaign Name</th>
+                                <th className="px-6 py-4">ID</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4 text-right">Budget</th>
                                 <th className="px-6 py-4 text-right">Burned</th>
@@ -82,6 +83,7 @@ export const CampaignsListPage: React.FC = () => {
                                 Array.from({ length: 3 }).map((_, i) => (
                                     <tr key={i} className="animate-pulse">
                                         <td className="px-6 py-4"><div className="h-4 w-32 bg-slate-800 rounded"></div></td>
+                                        <td className="px-6 py-4"><div className="h-4 w-16 bg-slate-800 rounded"></div></td>
                                         <td className="px-6 py-4"><div className="h-6 w-16 bg-slate-800 rounded-full"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 w-12 bg-slate-800 rounded ml-auto"></div></td>
                                         <td className="px-6 py-4"><div className="h-4 w-12 bg-slate-800 rounded ml-auto"></div></td>
@@ -93,7 +95,14 @@ export const CampaignsListPage: React.FC = () => {
                                 campaigns?.map((camp) => (
                                     <tr key={camp.id} className="hover:bg-slate-800/30 transition-colors group">
                                         <td className="px-6 py-4">
-                                            <div className="font-medium text-slate-200">{camp.name}</div>
+                                            <a
+                                                href={`http://localhost:8000/api/admin/campaigns/${camp.id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-left font-medium text-slate-200 hover:text-primary-400 transition-colors"
+                                            >
+                                                {camp.name}
+                                            </a>
                                             <div className="text-xs text-slate-500 mt-0.5 font-mono">{camp.type}</div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -116,26 +125,15 @@ export const CampaignsListPage: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => navigate(`/rewards/campaigns/${camp.id}`)}
-                                                    className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-                                                    title="Edit Campaign"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(camp.id)}
-                                                    className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
-                                                    title="Delete Campaign"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                            <button
+                                                onClick={() => handleDelete(camp.id)}
+                                                className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+                                                title="Delete Campaign"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
