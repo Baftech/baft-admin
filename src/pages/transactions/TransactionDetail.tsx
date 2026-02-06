@@ -9,6 +9,12 @@ interface Party {
   name: string;
   vpa_handle?: string;
   type: string;
+  external_source?: {
+    type: 'BANK' | 'UPI' | 'CARD' | 'WALLET';
+    institution_name?: string;
+    account_last_four?: string;
+    vpa_handle?: string;
+  };
 }
 
 interface TransactionDetail {
@@ -209,6 +215,35 @@ export const TransactionDetailPage: React.FC = () => {
                       <div className="text-xs text-slate-300">{txn.source.vpa_handle}</div>
                     </div>
                   )}
+                  {/* External Source Details */}
+                  {txn.source.external_source && (
+                    <div className="pt-2 border-t border-slate-800/50 mt-2">
+                      <div className="text-[10px] text-slate-500 uppercase flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        External Source
+                      </div>
+                      <div className="mt-1 space-y-1">
+                        <div className="text-xs text-slate-300">
+                          {txn.source.external_source.institution_name || txn.source.external_source.type}
+                        </div>
+                        {txn.source.external_source.account_last_four && (
+                          <div className="text-xs text-slate-400">
+                            Account ending in {txn.source.external_source.account_last_four}
+                          </div>
+                        )}
+                        {txn.source.external_source.vpa_handle && (
+                          <div className="text-xs text-slate-400">
+                            UPI: {txn.source.external_source.vpa_handle}
+                          </div>
+                        )}
+                        <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-400 mt-1">
+                          {txn.source.external_source.type}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -232,9 +267,20 @@ export const TransactionDetailPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="text-[10px] text-slate-500 uppercase">User ID</div>
-                      <div className="text-xs text-slate-300 truncate" title={txn.destination.user_id || "System"}>
-                        {txn.destination.user_id || "System"}
-                      </div>
+                      {txn.destination.user_id ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/users/${txn.destination.user_id}`);
+                          }}
+                          className="text-xs text-slate-300 truncate hover:text-primary-400 transition-colors underline decoration-dotted underline-offset-2"
+                          title={txn.destination.user_id}
+                        >
+                          {txn.destination.user_id}
+                        </button>
+                      ) : (
+                        <div className="text-xs text-slate-500">System</div>
+                      )}
                     </div>
                   </div>
                   {txn.destination.vpa_handle && (

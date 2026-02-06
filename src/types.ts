@@ -21,4 +21,20 @@ export interface ApiError {
   raw_error?: string;
 }
 
+export interface ExternalSource {
+  type: 'BANK' | 'UPI' | 'CARD' | 'WALLET';
+  institution_name?: string;
+  account_last_four?: string;
+  vpa_handle?: string;
+}
+
+export interface Party {
+  account_id: string;
+  user_id: string | null;
+  name: string;
+  vpa_handle?: string;
+  type: string;
+  external_source?: ExternalSource;
+}
+
 

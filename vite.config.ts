@@ -11,10 +11,10 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         "/api/admin": {
-          target: env.VITE_API_BACKEND_URL || "http://localhost:8000",
+          target: "https://baft-backend-dev.onrender.com",
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, "")
+        rewrite: (path) => path
         }
       }
     }

@@ -13,6 +13,8 @@ interface TransactionSummary {
   created_at: string;
   source_account_id: string;
   destination_account_id: string;
+  source_name?: string;
+  destination_name?: string;
 }
 
 interface TransactionsListResponse {
@@ -96,6 +98,8 @@ export const TransactionsListPage: React.FC = () => {
             <thead>
               <tr className="border-b border-slate-800/60 bg-slate-900/40 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                 <th className="px-6 py-4">Transaction Details</th>
+                <th className="px-6 py-4">Source</th>
+                <th className="px-6 py-4">Destination</th>
                 <th className="px-6 py-4">Amount</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Date & Time</th>
@@ -105,7 +109,7 @@ export const TransactionsListPage: React.FC = () => {
             <tbody className="divide-y divide-slate-800/60">
               {isLoading && (
                 <tr>
-                  <td className="px-6 py-12 text-center text-slate-400" colSpan={5}>
+                  <td className="px-6 py-12 text-center text-slate-400" colSpan={7}>
                     <div className="flex flex-col items-center gap-2">
                       <div className="h-5 w-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                       <span>Loading transactions...</span>
@@ -115,7 +119,7 @@ export const TransactionsListPage: React.FC = () => {
               )}
               {error && !isLoading && (
                 <tr>
-                  <td className="px-6 py-12 text-center text-red-400" colSpan={5}>
+                  <td className="px-6 py-12 text-center text-red-400" colSpan={7}>
                     <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 inline-block">
                       {(error as Error).message}
                     </div>
@@ -124,7 +128,7 @@ export const TransactionsListPage: React.FC = () => {
               )}
               {!isLoading && !error && data?.data.length === 0 && (
                 <tr>
-                  <td className="px-6 py-12 text-center text-slate-400" colSpan={5}>
+                  <td className="px-6 py-12 text-center text-slate-400" colSpan={7}>
                     No transactions found matching your filters.
                   </td>
                 </tr>
@@ -163,6 +167,26 @@ export const TransactionsListPage: React.FC = () => {
                       </div>
                       <span className="text-xs text-slate-500 mt-1">
                         {txn.description || "No description"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col max-w-[200px]">
+                      <span className="text-slate-200 text-sm truncate" title={txn.source_name || txn.source_account_id}>
+                        {txn.source_name || txn.source_account_id}
+                      </span>
+                      <span className="text-xs text-slate-500 font-mono truncate" title={txn.source_account_id}>
+                        {txn.source_account_id.slice(0, 12)}...
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col max-w-[200px]">
+                      <span className="text-slate-200 text-sm truncate" title={txn.destination_name || txn.destination_account_id}>
+                        {txn.destination_name || txn.destination_account_id}
+                      </span>
+                      <span className="text-xs text-slate-500 font-mono truncate" title={txn.destination_account_id}>
+                        {txn.destination_account_id.slice(0, 12)}...
                       </span>
                     </div>
                   </td>
