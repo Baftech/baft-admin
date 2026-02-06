@@ -1,7 +1,8 @@
 import type { ApiError } from "../types";
 
-// Always call the backend via the Vite proxy at /api/admin
-const API_BASE_URL = "/api/admin";
+// In development, use Vite proxy at /api/admin
+// In production, use the configured API base URL
+const API_BASE_URL = import.meta.env.DEV ? "/api/admin" : (import.meta.env.VITE_API_BASE_URL || "https://baft-backend-prod.onrender.com/api/admin");
 const ACCESS_KEY_PRIMARY = "baft_admin_access_token";
 const ACCESS_KEY_ALT = "admin_access_token";
 
@@ -12,13 +13,7 @@ export class ApiClient {
     const alt = window.localStorage.getItem(ACCESS_KEY_ALT);
     const token = primary || alt;
 
-    if (!token) {
-      console.warn("[API Client] Admin access token is missing from localStorage");
-      console.warn("  Checked keys:", ACCESS_KEY_PRIMARY, "and", ACCESS_KEY_ALT);
-      console.warn("  Please login to get a valid token");
-    } else {
-      console.log("[API Client] Admin access token found", token.substring(0, 20) + "...");
-    }
+    // Token validation - no logging needed
 
     return token;
   }
@@ -35,30 +30,17 @@ export class ApiClient {
       const token = this.getAccessToken();
       if (token) {
         headers.Authorization = `Bearer ${token}`;
-        console.log("[API Client] Adding Bearer token to request:", path);
-      } else {
-        console.error("[API Client] No token available for request:", path);
-        console.error("  Request will be sent without Authorization header");
       }
-    } else {
-      console.log("[API Client] Using provided Authorization header for:", path);
     }
 
     const fullUrl = `${API_BASE_URL}${path}`;
-    console.log("[API Client] Making request:", options.method || "GET", fullUrl);
 
     let res = await fetch(fullUrl, {
       ...options,
       headers
     });
 
-    console.log(
-      "[API Client] Response status:",
-      res.status,
-      res.statusText,
-      "for",
-      path
-    );
+
 
     // Handle 401 Unauthorized - Attempt Refresh
     if (res.status === 401 && !path.includes("/auth/login") && !path.includes("/auth/refresh")) {
