@@ -2,7 +2,7 @@ import type { ApiError } from "../types";
 
 // In development, use Vite proxy at /api/admin
 // In production, use the configured API base URL
-const API_BASE_URL = import.meta.env.DEV ? "/api/admin" : (import.meta.env.VITE_API_BASE_URL || "https://baft-backend-prod.onrender.com/api/admin");
+const API_BASE_URL = import.meta.env.DEV ? "/api/admin" : (import.meta.env.VITE_API_BASE_URL || "https://baft-backend-dev.onrender.com/api/admin");
 const ACCESS_KEY_PRIMARY = "baft_admin_access_token";
 const ACCESS_KEY_ALT = "admin_access_token";
 
